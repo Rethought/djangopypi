@@ -161,9 +161,6 @@ To push the package to the local pypi::
 
     $ python setup.py mregister -r local sdist mupload -r local
 
-.. [#] ``djangopypi`` is South enabled, if you are using South then you will need
-   to run the South ``migrate`` command to get the tables.
-
 Installing a package with pip
 -----------------------------
 
@@ -187,7 +184,7 @@ The downside is that each install of a package hosted on the repository in
 will fail before pip falls back to the alternative.
 
 Transparent proxy to an upstream PyPi repository
-++++++++++++++++++++++++++++++++++++++++++++++++
+________________________________________________
 
 The above method works well, but you can also let djangopypi do the hard work
 and redirect to an upstream index if the requested package is not found
@@ -199,4 +196,7 @@ upstream repository ``http://pypi.python.org`` the following must be set in
 
 If you'd like to fall-back to some other repository, also add::
 
- DJANGOPYPI_PROXY_BASE_URL = 'http://my.pypirepository.org'
+ DJANGOPYPI_PROXY_BASE_URL = 'http://my.alternativepypi.com'
+
+.. [#] ``djangopypi`` is South enabled, if you are using South then you will need
+   to run the South ``migrate`` command to get the tables.
