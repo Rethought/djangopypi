@@ -176,7 +176,7 @@ package is not on your new server, or in particular if you are installing a numb
 of packages, some on your private server and some on another, you can use
 pip in the following manner::
 
- $ pip install -i http://localhost:8000/simple/ \
+ $ pip install -i http://my.pypiserver.com/simple/ \
    --extra-index-url=http://pypi.python.org/simple/ \
    -r requirements.txt
 
@@ -185,3 +185,18 @@ pip in the following manner::
 The downside is that each install of a package hosted on the repository in
 ``--extra-index-url`` will start with a call to the first repository which
 will fail before pip falls back to the alternative.
+
+Transparent proxy to an upstream PyPi repository
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+The above method works well, but you can also let djangopypi do the hard work
+and redirect to an upstream index if the requested package is not found
+locally. By default this is disabled. To enable proxying to the default
+upstream repository ``http://pypi.python.org`` the following must be set in
+``settings.py``::
+
+ DJANGOPYPI_PROXY_MISSING = True
+
+If you'd like to fall-back to some other repository, also add::
+
+ DJANGOPYPI_PROXY_BASE_URL = 'http://my.pypirepository.org'
