@@ -159,7 +159,8 @@ class Distribution(models.Model):
         return self.content.name
 
     def get_absolute_url(self):
-        return "%s#md5=%s" % (self.content.url, self.md5_digest)
+        return "%s%s#md5=%s" % (settings.DJANGOPYPI_DIST_ROOT,
+                                self.content.url, self.md5_digest)
 
     class Meta:
         verbose_name = _(u"distribution")

@@ -9,8 +9,11 @@ from django.views.generic import list_detail, create_update
 from djangopypi.decorators import user_owns_package, user_maintains_package
 from djangopypi.models import Package, Release
 from djangopypi.forms import SimplePackageSearchForm, PackageForm
+from djangopypi import upstream
 
 
+import logging
+logger = logging.getLogger()
 
 def index(request, **kwargs):
     kwargs.setdefault('template_object_name', 'package')
@@ -21,24 +24,59 @@ def simple_index(request, **kwargs):
     kwargs.setdefault('template_name', 'djangopypi/package_list_simple.html')
     return index(request, **kwargs)
 
-def details(request, package, proxy_folder='pypi', **kwargs):
+def _detail_view(request, package, extra_context, **kwargs):
+    """
+    Helper to eliminate duplication in ``details``.
+    """
+    return list_detail.object_detail(request, object_id=package,
+                                     extra_context=extra_context, **kwargs)
+
+def details(request, package, version=None, proxy_folder='pypi', **kwargs):
     kwargs.setdefault('template_object_name', 'package')
-    kwargs.setdefault('queryset', Package.objects.all())
+    queryset = Package.objects.all()
+    kwargs.setdefault('queryset', queryset)
+    extra_context = dict(version=version)
+    logger.debug("Details sought for {0} == {1}".format(package, version))
     try:
-        return list_detail.object_detail(request, object_id=package, **kwargs)
+        if version:
+            pkg = queryset.filter(pk=package)
+            if pkg:
+                pkg = pkg[0]
+                logger.debug("Package {0} version sought {1}"
+                             .format(package, version))
+                logger.debug("Package {0} versions available {1}"
+                             .format(package,
+                                     [r.version for r in pkg.releases.all()]))
+                release = [r.version for r in pkg.releases.all()
+                           if r.version == version]
+                if not release:
+                    raise Http404()
+
+        return _detail_view(request, package, extra_context, **kwargs)
     except Http404, e:
-        if settings.DJANGOPYPI_PROXY_MISSING:
+        if settings.DJANGOPYPI_CACHE_ENABLED:
+            # download and cache upstream package if found
+            try:
+                upstream.cache_package(package, version)
+                kwargs.setdefault('queryset',  Package.objects.all())
+                return _detail_view(request, package, extra_context, **kwargs)
+            except upstream.PyPiCacheError:
+                raise Http404(u'%s is not a registered package '
+                               'in any upstream cache' % (package,))
+
+        elif settings.DJANGOPYPI_PROXY_MISSING:
             return HttpResponseRedirect('%s/%s/%s/' % 
                                         (settings.DJANGOPYPI_PROXY_BASE_URL.rstrip('/'),
                                          proxy_folder,
                                          package))
+
         raise Http404(u'%s is not a registered package' % (package,))
 
 
-def simple_details(request, package, **kwargs):
+def simple_details(request, package, version=None, **kwargs):
     kwargs.setdefault('proxy_folder', 'simple')
     kwargs.setdefault('template_name', 'djangopypi/package_detail_simple.html')
-    return details(request, package, **kwargs)
+    return details(request, package, version=version, **kwargs)
 
 def doap(request, package, **kwargs):
     kwargs.setdefault('template_name', 'djangopypi/package_doap.xml')

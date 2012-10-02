@@ -93,7 +93,7 @@ something like following::
  urlpatterns = patterns('',
      # ... url patterns...
 
-     url(r'^simple/[\w\d_\.\-]+/dists/(?P<path>.*)$', 'django.views.static.serve',
+     url(r'^dists/(?P<path>.*)$', 'django.views.static.serve',
              {'document_root': os.path.join(settings.MEDIA_ROOT,
                                             settings.DJANGOPYPI_RELEASE_UPLOAD_TO)}),
      url(r'', include("djangopypi.urls")),
@@ -110,12 +110,25 @@ a clause in an NGINX configuration file something like the following::
  server {
    ... configuration...
    
-   location ~ ^/simple/[a-zA-Z0-9\,\-\.]+/dists/ {
+   location ~ ^/dists/ {
        alias /path/to/upload/dists/;
    }
 
    ... configuration...
  }
+
+Distribution download root
+++++++++++++++++++++++++++
+
+The above assumes downloads are from ``http://DOMAIN/dists`` but versions
+<= 0.4.4 made links page relative, so for example
+``http://DOMAIN/simple/<PACKAGE>/dists/``. In order to remedy this without
+breaking existing installations the new setting ``DJANGOPYPI_DIST_ROOT``
+has been introduce. Default behaviour is as per version 0.4.4. To get
+more reliable download links, as assumed in the above examples, add the
+following to settings::
+
+ DJANGOPYPI_DIST_ROOT = '/'
 
 Uploading to your PyPI
 ----------------------
@@ -186,12 +199,12 @@ The downside is that each install of a package hosted on the repository in
 ``--extra-index-url`` will start with a call to the first repository which
 will fail before pip falls back to the alternative.
 
-Transparent proxy to an upstream PyPi repository
-++++++++++++++++++++++++++++++++++++++++++++++++
+Transparent redirect to an upstream PyPi repository
++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The above method works well, but you can also let djangopypi do the hard work
-and redirect to an upstream index if the requested package is not found
-locally. By default this is disabled. To enable proxying to the default
+The above method works well, but you can also let djangopypi
+redirect to an upstream index if the requested package is not found
+locally. By default this is disabled. To enable redirecting to the default
 upstream repository ``http://pypi.python.org`` the following must be set in
 ``settings.py``::
 
@@ -200,3 +213,29 @@ upstream repository ``http://pypi.python.org`` the following must be set in
 If you'd like to fall-back to some other repository, also add::
 
  DJANGOPYPI_PROXY_BASE_URL = 'http://my.pypirepository.org'
+
+Transparent PyPi cache
+++++++++++++++++++++++
+
+Proxying is handy but it neither protects you from upstream failure nor does
+it do anything to help speed up installations. To assist with both,
+DjangoPyPi has a transparent cache mode whereby it proxies a number of
+upstream repositories and defers to them in the event that it does not have
+a package locally. The package and meta data are pulled from the first
+upstream repository in the list that has it, and the package is cached locally
+and an index entry made. Subsequent installs of the package will be satisfied
+directly from your local repository.
+
+To enable caching::
+
+ DJANGOPYPI_CACHE_ENABLED = True
+
+You can set additional upstreams by setting the following::
+
+ DJANGOPYPI_UPSTREAM_INDEXES = ['http://pypi.python.org',
+                                'http://other.index.org',
+                                ...]  
+
+This will work with upstream PyPi and DjangoPyPi as long as the latter is this
+version or has this code merged in. This is to ensure the URL
+``/simple/<PACKAGE>/<VERSION/`` is handled; a new feature in this branch.

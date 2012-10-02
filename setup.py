@@ -6,12 +6,12 @@ from setuptools import setup, find_packages
 def fread(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-version = '0.4.4'
+version = '0.5.0'
 
 setup(
     name='djangopypi',
     version=version,
-    description="A Django application that emulates the Python Package Index.",
+    description="A Django application that emulates the Python Package Index with transparent caching.",
     long_description=fread("README.rst")+"\n\n"+fread('Changelog.rst')+"\n\n"+fread('AUTHORS.rst'),
     classifiers=[
         "Framework :: Django",
@@ -41,6 +41,7 @@ setup(
         'setuptools',
         'pkginfo',
         'docutils',
+        'requests',
     ],
     setup_requires=[
         'setuptools',

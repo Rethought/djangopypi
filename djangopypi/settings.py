@@ -120,3 +120,32 @@ if not hasattr(settings, 'DJANGOPYPI_PROXY_BASE_URL'):
 
 if not hasattr(settings, 'DJANGOPYPI_PROXY_MISSING'):
     settings.DJANGOPYPI_PROXY_MISSING = False
+
+"""
+The root used in Distribution.get_absolute_url. In refactoring it was
+necessary to make it relative to the domain, not relative to the page
+rendering the link (ie prefixed with '/'). Doing this could break existing
+installations prior to this version however, so by default existing behaviour
+is kept, but the user can set DJANGOPYPI_DIST_ROOT='/' to get better
+behaviour.
+"""
+if not hasattr(settings, 'DJANGOPYPI_DIST_ROOT'):
+    settings.DJANGOPYPI_DIST_ROOT = ''
+
+"""
+List of upstream PyPi repositories to be queried if transparent caching
+is enabled. They will be queried in sequence with the search terminating
+at the first to supply the requested package and version.
+"""
+if not hasattr(settings, 'DJANGOPYPI_UPSTREAM_INDEXES'):
+    settings.DJANGOPYPI_UPSTREAM_INDEXES = ['http://pypi.python.org']
+
+"""
+This must be set True to enable DjangoPyPi's transparent caching
+from upstream caches as defined in DJANGOPYPI_UPSTREAM_INDEXES.
+By default disabled. If enabled, DJANGOPYPI_PROXY_MISSING will not
+impact behaviour (ie there will be no redirecting; PROXY is a misnomer in
+that case.)
+"""
+if not hasattr(settings, 'DJANGOPYPI_CACHE_ENABLED'):
+    settings.DJANGOPYPI_CACHE_ENABLED = False

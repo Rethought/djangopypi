@@ -12,6 +12,8 @@ urlpatterns = patterns("djangopypi.views",
     
     url(r'^simple/(?P<package>[\w\d_\.\-]+)/$','packages.simple_details',
         name='djangopypi-package-simple'),
+    url(r'^simple/(?P<package>[\w\d_\.\-]+)/(?P<version>[\w\d_\.\-]+)/$','packages.simple_details',
+        name='djangopypi-package-simple'),
     
     url(r'^pypi/(?P<package>[\w\d_\.\-]+)/$','packages.details',
         name='djangopypi-package'),

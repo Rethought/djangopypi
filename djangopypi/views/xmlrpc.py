@@ -1,3 +1,4 @@
+import urllib
 import xmlrpclib
 
 from django.conf import settings
@@ -32,7 +33,13 @@ def list_packages(request):
 
 def package_releases(request, package_name, show_hidden=False):
     try:
-        return XMLRPCResponse(params=(list(Package.objects.get(name=package_name).releases.filter(hidden=show_hidden).values_list('version', flat=True)),))
+        q = Package.objects.get(name=package_name).releases
+        if show_hidden is False:
+            q = q.filter(hidden=False)
+
+        # the list reversal assumes PK order is inverse version order
+        q=list(q.values_list('version', flat=True))[::-1]
+        return XMLRPCResponse(params=(q,))
     except Package.DoesNotExist:
         return XMLRPCResponse(params=([],))
 
@@ -43,7 +50,7 @@ def release_urls(request, package_name, version):
     try:
         for dist in Package.objects.get(name=package_name).releases.get(version=version).distributions.all():
             dists.append({
-                'url': '%s%s' % (base_url, dist.get_absolute_url()),
+                'url': '%s' % urllib.basejoin(base_url, dist.get_absolute_url()),
                 'packagetype': dist.filetype,
                 'filename': dist.filename,
                 'size': dist.content.size,
