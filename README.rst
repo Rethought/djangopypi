@@ -200,7 +200,7 @@ The downside is that each install of a package hosted on the repository in
 will fail before pip falls back to the alternative.
 
 Transparent redirect to an upstream PyPi repository
-+++++++++++++++++++++++++++++++++++++++++++++++++++
+___________________________________________________
 
 The above method works well, but you can also let djangopypi
 redirect to an upstream index if the requested package is not found
@@ -215,7 +215,7 @@ If you'd like to fall-back to some other repository, also add::
  DJANGOPYPI_PROXY_BASE_URL = 'http://my.pypirepository.org'
 
 Transparent PyPi cache
-++++++++++++++++++++++
+______________________
 
 Proxying is handy but it neither protects you from upstream failure nor does
 it do anything to help speed up installations. To assist with both,
